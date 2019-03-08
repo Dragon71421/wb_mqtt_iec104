@@ -8,10 +8,10 @@
 /* Mqtt library from contactless */
 #include <wbmqtt/mqtt_wrapper.h>
 
-#include <jsoncpp/json/json.h>
+#include "config_parser.h"
 
 /* Constant name of topic with trace information */
-const std::string TRACE_TOPIC = "/IEC104Server/ProtocolTrace";
+static const std::string TRACE_TOPIC = "/IEC104Server/ProtocolTrace";
 
 
 /* Global variables is wrong decision but temporary */
@@ -82,10 +82,20 @@ int main( int argc, char** argv )
 {
     set_sighandler();
 
-    /* create localhost MQTT client */
+    try /* Parse command line arguments and apply them */
+    {
+        parseCommandLineArgs( argc, argv );
+    }
+    catch (const ConfigParserException& e)
+    {
+        std::cerr << e.what() << std::endl;
+        return 1;
+    }
+
+    /* create test MQTT client just for example */
     TMQTTClient::TConfig mqtt_config;
     mqtt_config.Port = 1883;
-    mqtt_config.Host = "localhost";
+    mqtt_config.Host = "192.168.1.38";
     mqtt_config.Id = "mqtt-iec104";
     mqtt_client = std::make_shared<TMQTTClient>(mqtt_config);
 
