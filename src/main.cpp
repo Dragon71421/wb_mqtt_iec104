@@ -9,9 +9,7 @@
 #include <wbmqtt/mqtt_wrapper.h>
 
 #include "config_parser.h"
-
-/* Constant name of topic with trace information */
-static const std::string TRACE_TOPIC = "/IEC104Server/ProtocolTrace";
+#include "log.h"
 
 
 /* Global variables is wrong decision but temporary */
@@ -27,13 +25,11 @@ public:
 
 void TestObserver::OnConnect(int rc)
 {
-    mqtt_client->Publish( nullptr, TRACE_TOPIC, "OnConnect" );
+    MQTT_LOGGER( MqttLogger::L_DEBUG, "OnConnect" );
 }
 
 void TestObserver::OnMessage(const struct mosquitto_message *message)
-{
-    mqtt_client->Publish( nullptr, TRACE_TOPIC, "OnMessage" );
-    
+{    
     /* Create string and append information about incoming message topic */
     std::string outMessage;
     outMessage.append( "Message from: " );
@@ -44,12 +40,12 @@ void TestObserver::OnMessage(const struct mosquitto_message *message)
     outMessage.append( static_cast<const char*>(message->payload), message->payloadlen );
     
     /* Publish string with info about message to TRACE_TOPIC */
-    mqtt_client->Publish( nullptr, TRACE_TOPIC, outMessage );
+    MQTT_LOGGER( MqttLogger::L_ERROR, outMessage.c_str() );
 }
 
 void TestObserver::OnSubscribe(int mid, int qos_count, const int *granted_qos)
 {
-    mqtt_client->Publish( nullptr, TRACE_TOPIC, "OnSubscribe" );
+    MQTT_LOGGER( MqttLogger::L_INFO, "OnSubscribe" );
 }
 
 /* Flag for signal processing */
@@ -111,7 +107,7 @@ int main( int argc, char** argv )
     {
         /* Print test message every 5 seconds */
         sleep(5);
-        mqtt_client->Publish( nullptr, TRACE_TOPIC, "Test wb MQTT" );
+        MQTT_LOGGER( MqttLogger::L_DEBUG, "Test wb MQTT" );
     }
 
     return 0;
