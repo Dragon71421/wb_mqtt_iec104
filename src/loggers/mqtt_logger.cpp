@@ -34,6 +34,9 @@ void MqttLogger::setupMqttServer( std::string & host, int port, int keepAlive )
     mqtt_client->StartLoop();
 }
 
+/*!
+ * Print message if logging enabled and current log level bigger then message level 
+ */
 void MqttLogger::printLog( LogLevels msg_level, const char* msg )
 {
     if( mqtt_client && (log_level != 0) ) /* Print log if mqtt client exist and log enable */
