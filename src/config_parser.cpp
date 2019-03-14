@@ -45,15 +45,19 @@ void parseCommandLineArgs(int argc, char *argv[])
         throw ConfigParserException( std::string("Can't parse input JSON file: ") +
                                      reader.getFormattedErrorMessages() );
 
-    /*  */
     if( Root["ProtocolTrace"].isUInt() )
     {
-        uint log_level = ( Root["ProtocolTrace"] >= MqttLogger::L_MAX ) ? MqttLogger::L_ALL : Root["ProtocolTrace"].asInt();
+        LogLevels log_level;
+        if ( Root["ProtocolTrace"] >= LogLevels::MAX )
+            log_level = LogLevels::ALL;
+        else 
+            log_level = (LogLevels) Root["ProtocolTrace"].asInt();
+        
         MqttLogger::Instance().setLogLevel( log_level );
     }
     else
     {
-        MqttLogger::Instance().setLogLevel( MqttLogger::L_OFF );
+        MqttLogger::Instance().setLogLevel( LogLevels::OFF );
     }
     
 

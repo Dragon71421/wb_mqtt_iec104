@@ -9,7 +9,7 @@ const std::string TRACE_TOPIC = "/IEC104Server/ProtocolTrace";
  */
 MqttLogger::MqttLogger()
 {
-    log_level = L_OFF;
+    log_level = LogLevels::OFF;
 
     TMQTTClient::TConfig mqtt_config;
     mqtt_config.Id = "mqtt-iec104-logger";
@@ -34,13 +34,13 @@ void MqttLogger::setupMqttServer( std::string & host, int port, int keepAlive )
     mqtt_client->StartLoop();
 }
 
-void MqttLogger::printLog( uint level, const char* message )
+void MqttLogger::printLog( LogLevels msg_level, const char* msg )
 {
     if( mqtt_client && (log_level != 0) ) /* Print log if mqtt client exist and log enable */
     {
-        if( (log_level == L_ALL) || (level <= log_level) )
+        if( (log_level == LogLevels::ALL) || (log_level >= msg_level) )
         {
-            mqtt_client->Publish( nullptr, TRACE_TOPIC, message);
+            mqtt_client->Publish( nullptr, TRACE_TOPIC, msg);
         }
     }
 }

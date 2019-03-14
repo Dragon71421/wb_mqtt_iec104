@@ -25,7 +25,7 @@ public:
 
 void TestObserver::OnConnect(int rc)
 {
-    MQTT_LOGGER( MqttLogger::L_DEBUG, "OnConnect" );
+    MQTT_LOGGER( LogLevels::DEBUG, "OnConnect" );
 }
 
 void TestObserver::OnMessage(const struct mosquitto_message *message)
@@ -40,12 +40,12 @@ void TestObserver::OnMessage(const struct mosquitto_message *message)
     outMessage.append( static_cast<const char*>(message->payload), message->payloadlen );
     
     /* Publish string with info about message to TRACE_TOPIC */
-    MQTT_LOGGER( MqttLogger::L_ERROR, outMessage.c_str() );
+    MQTT_LOGGER( LogLevels::ERROR, outMessage.c_str() );
 }
 
 void TestObserver::OnSubscribe(int mid, int qos_count, const int *granted_qos)
 {
-    MQTT_LOGGER( MqttLogger::L_INFO, "OnSubscribe" );
+    MQTT_LOGGER( LogLevels::INFO, "OnSubscribe" );
 }
 
 /* Flag for signal processing */
@@ -107,7 +107,7 @@ int main( int argc, char** argv )
     {
         /* Print test message every 5 seconds */
         sleep(5);
-        MQTT_LOGGER( MqttLogger::L_DEBUG, "Test wb MQTT" );
+        MQTT_LOGGER( LogLevels::DEBUG, "Test wb MQTT" );
     }
 
     return 0;
