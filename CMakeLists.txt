@@ -11,10 +11,17 @@ include_directories(
 set (bin_src    src/main.cpp
                 src/config_parser.cpp
                 src/loggers/mqtt_logger.cpp
+                src/iec104_server.cpp
+)
+
+set (libs       wbmqtt
+                jsoncpp
+                mosquittopp
+                lib60870
 )
 
 
 # create main executed file
 add_executable( wb-mqtt-iec104 ${bin_src} )
 
-target_link_libraries( wb-mqtt-iec104 wbmqtt jsoncpp mosquittopp )
+target_link_libraries( wb-mqtt-iec104 ${libs} )

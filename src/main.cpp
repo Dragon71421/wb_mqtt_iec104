@@ -7,11 +7,12 @@
 
 /* Mqtt library from contactless */
 #include <wbmqtt/mqtt_wrapper.h>
+#include "iec104_server.h"
 
 #include "config_parser.h"
 #include "log.h"
 
-
+#if 1
 /* Global variables is wrong decision but temporary */
 PMQTTClient mqtt_client;
 
@@ -47,6 +48,7 @@ void TestObserver::OnSubscribe(int mid, int qos_count, const int *granted_qos)
 {
     MQTT_LOGGER( LogLevels::INFO, "OnSubscribe" );
 }
+#endif
 
 /* Flag for signal processing */
 static bool running = true;
@@ -88,6 +90,14 @@ int main( int argc, char** argv )
         return 1;
     }
 
+    iec104Server::Instance().setIpAddress("127.0.0.1");
+
+    /* get the connection parameters - we need them to create correct ASDUs */
+    CS101_AppLayerParameters alParams = iec104Server::Instance().getAppParams();//CS104_Slave_getAppLayerParameters(slave);
+
+    iec104Server::Instance().start();
+    
+#if 1
     /* create test MQTT client just for example */
     TMQTTClient::TConfig mqtt_config;
     mqtt_config.Port = 1883;
@@ -102,12 +112,32 @@ int main( int argc, char** argv )
     mqtt_client->StartLoop();
 
     mqtt_client->Subscribe( nullptr, "/devices/hwmon/controls/CPU Temperature" , 0);
+#endif
 
+    MQTT_LOGGER( LogLevels::DEBUG, "Start main loop" );
+    int16_t scaledValue = 0;
     while(running)
     {
         /* Print test message every 5 seconds */
         sleep(5);
         MQTT_LOGGER( LogLevels::DEBUG, "Test wb MQTT" );
+
+        CS101_ASDU newAsdu = CS101_ASDU_create(alParams, false, CS101_COT_PERIODIC, 0, 1, false, false);
+        InformationObject io = (InformationObject) MeasuredValueScaled_create(NULL, 110, scaledValue, IEC60870_QUALITY_GOOD);
+
+        scaledValue++;
+
+        CS101_ASDU_addInformationObject(newAsdu, io);
+
+        InformationObject_destroy(io);
+
+        /* Add ASDU to slave event queue - don't release the ASDU afterwards!
+         * The ASDU will be released by the Slave instance when the ASDU
+         * has been sent.
+         */
+        iec104Server::Instance().sendAsdu( newAsdu );
+
+        CS101_ASDU_destroy(newAsdu);
     }
 
     return 0;
