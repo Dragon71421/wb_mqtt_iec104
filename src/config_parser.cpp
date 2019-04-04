@@ -74,11 +74,12 @@ void parseCommandLineArgs(int argc, char *argv[])
     }
 }
 
-void applyMqttSettings()
+static void applyMqttSettings()
 {
     std::string ip = Root["Mqtt"]["Address"].asString();
     int port = Root["Mqtt"]["IPPort"].asInt();
     int keepAlive = Root["Mqtt"]["KeepAlive"].asInt();
 
     MqttLogger::Instance().setupMqttServer( ip, port, keepAlive );
+    MqttClient::Instance().setupMqttServer( ip, port, keepAlive );
 }

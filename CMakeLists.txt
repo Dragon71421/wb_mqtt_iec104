@@ -12,6 +12,7 @@ set (bin_src    src/main.cpp
                 src/config_parser.cpp
                 src/loggers/mqtt_logger.cpp
                 src/iec104_server.cpp
+                src/mqtt_client.cpp
 )
 
 set (libs       wbmqtt

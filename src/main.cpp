@@ -7,48 +7,12 @@
 
 /* Mqtt library from contactless */
 #include <wbmqtt/mqtt_wrapper.h>
+
 #include "iec104_server.h"
+#include "mqtt_client.h"
 
 #include "config_parser.h"
 #include "log.h"
-
-#if 1
-/* Global variables is wrong decision but temporary */
-PMQTTClient mqtt_client;
-
-/* Simple observer that print message with mqtt connection status */
-class TestObserver : public IMQTTObserver {
-public:    
-    void OnConnect(int rc) override;
-    void OnMessage(const struct mosquitto_message *message) override;
-    void OnSubscribe(int mid, int qos_count, const int *granted_qos) override;
-};
-
-void TestObserver::OnConnect(int rc)
-{
-    MQTT_LOGGER( LogLevels::DEBUG, "OnConnect" );
-}
-
-void TestObserver::OnMessage(const struct mosquitto_message *message)
-{    
-    /* Create string and append information about incoming message topic */
-    std::string outMessage;
-    outMessage.append( "Message from: " );
-    outMessage.append( message->topic );
-
-    /* Append incoming message */
-    outMessage.append( "\nMessage: " );
-    outMessage.append( static_cast<const char*>(message->payload), message->payloadlen );
-    
-    /* Publish string with info about message to TRACE_TOPIC */
-    MQTT_LOGGER( LogLevels::ERROR, outMessage.c_str() );
-}
-
-void TestObserver::OnSubscribe(int mid, int qos_count, const int *granted_qos)
-{
-    MQTT_LOGGER( LogLevels::INFO, "OnSubscribe" );
-}
-#endif
 
 /* Flag for signal processing */
 static bool running = true;
@@ -96,23 +60,6 @@ int main( int argc, char** argv )
     CS101_AppLayerParameters alParams = iec104Server::Instance().getAppParams();//CS104_Slave_getAppLayerParameters(slave);
 
     iec104Server::Instance().start();
-    
-#if 1
-    /* create test MQTT client just for example */
-    TMQTTClient::TConfig mqtt_config;
-    mqtt_config.Port = 1883;
-    mqtt_config.Host = "192.168.1.38";
-    mqtt_config.Id = "mqtt-iec104";
-    mqtt_client = std::make_shared<TMQTTClient>(mqtt_config);
-
-    /* add observer to client */
-    mqtt_client->Observe( std::make_shared<TestObserver>() );
-
-    mqtt_client->ConnectAsync();
-    mqtt_client->StartLoop();
-
-    mqtt_client->Subscribe( nullptr, "/devices/hwmon/controls/CPU Temperature" , 0);
-#endif
 
     MQTT_LOGGER( LogLevels::DEBUG, "Start main loop" );
     int16_t scaledValue = 0;
