@@ -54,8 +54,6 @@ int main( int argc, char** argv )
         return 1;
     }
 
-    iec104Server::Instance().setIpAddress("127.0.0.1");
-
     /* get the connection parameters - we need them to create correct ASDUs */
     CS101_AppLayerParameters alParams = iec104Server::Instance().getAppParams();//CS104_Slave_getAppLayerParameters(slave);
 

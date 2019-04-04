@@ -9,10 +9,13 @@
 #include <jsoncpp/json/json.h>
 
 #include "mqtt_logger.h"
+#include "mqtt_client.h"
+#include "iec104_server.h"
 
 static Json::Value Root;
 
 static void applyMqttSettings();
+static void applyIecSettings();
 
 /*!
  * Function use getopt utils for parsing command line arguments.
@@ -72,6 +75,11 @@ void parseCommandLineArgs(int argc, char *argv[])
     {
         applyMqttSettings();
     }
+
+    if( Root["Iec"].isObject() )
+    {
+        applyIecSettings();
+    }
 }
 
 static void applyMqttSettings()
@@ -82,4 +90,15 @@ static void applyMqttSettings()
 
     MqttLogger::Instance().setupMqttServer( ip, port, keepAlive );
     MqttClient::Instance().setupMqttServer( ip, port, keepAlive );
+}
+
+static void applyIecSettings()
+{
+    std::string ip = Root["Iec"]["IPAddress"].asString();
+    int port = Root["Iec"]["IPPort"].asInt();
+
+    printf("Set iec ip port: %s with port %d\n", ip.c_str(), port);
+
+    iec104Server::Instance().setIpAddress( ip.c_str() );
+    iec104Server::Instance().setIpPort( port );
 }

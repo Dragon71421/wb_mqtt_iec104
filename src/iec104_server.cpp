@@ -201,7 +201,7 @@ iec104Server::~iec104Server()
 }
 
 
-void iec104Server::sendAsdu( CS101_ASDU asdu )
+void iec104Server::sendAsdu( CS101_ASDU& asdu )
 {
     /* Add asdu for sending if server is running and drop asdu in other case */
     if( this->isRunning() )

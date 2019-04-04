@@ -29,9 +29,11 @@ public:
         return s;
     }
 
-    void setIpAddress(const char* ipAddress) { CS104_Slave_setLocalAddress(server, ipAddress); }
+    void setIpAddress( const char* ipAddress ) { CS104_Slave_setLocalAddress(server, ipAddress); }
+    void setIpPort( int port ) { CS104_Slave_setLocalPort(server, port); }
+
     CS101_AppLayerParameters getAppParams() { return CS104_Slave_getAppLayerParameters(server); }
-    void sendAsdu( CS101_ASDU asdu);
+    void sendAsdu( CS101_ASDU& asdu);
 
     void start() { CS104_Slave_start(server); }
     void stop()  { CS104_Slave_stop(server); }
