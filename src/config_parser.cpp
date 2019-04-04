@@ -11,6 +11,7 @@
 #include "mqtt_logger.h"
 #include "mqtt_client.h"
 #include "iec104_server.h"
+#include "mqtt_iec104_converter.h"
 
 static Json::Value Root;
 
@@ -80,6 +81,8 @@ void parseCommandLineArgs(int argc, char *argv[])
     {
         applyIecSettings();
     }
+
+    addTopicForMonitor( "/devices/hwmon/controls/CPU Temperature", 112);
 }
 
 static void applyMqttSettings()

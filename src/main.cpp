@@ -55,7 +55,7 @@ int main( int argc, char** argv )
     }
 
     /* get the connection parameters - we need them to create correct ASDUs */
-    CS101_AppLayerParameters alParams = iec104Server::Instance().getAppParams();//CS104_Slave_getAppLayerParameters(slave);
+    CS101_AppLayerParameters alParams = iec104Server::Instance().getAppParams();
 
     iec104Server::Instance().start();
 

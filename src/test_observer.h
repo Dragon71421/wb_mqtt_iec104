@@ -1,7 +1,9 @@
 #pragma once
 
 #include <wbmqtt/mqtt_wrapper.h>
+
 #include "log.h"
+#include "mqtt_iec104_converter.h"
 
 /* Simple observer that print message with mqtt connection status */
 class TestObserver : public IMQTTObserver {
@@ -23,12 +25,19 @@ void TestObserver::OnMessage(const struct mosquitto_message *message)
     outMessage.append( "Message from: " );
     outMessage.append( message->topic );
 
+    std::string msg( static_cast<const char*>(message->payload), message->payloadlen );
     /* Append incoming message */
     outMessage.append( "\nMessage: " );
     outMessage.append( static_cast<const char*>(message->payload), message->payloadlen );
     
     /* Publish string with info about message to TRACE_TOPIC */
-    MQTT_LOGGER( LogLevels::ERROR, outMessage.c_str() );
+    MQTT_LOGGER( LogLevels::DEBUG, outMessage.c_str() );
+
+    if( isTopicMonitored( message->topic ) )
+    {
+        /* Example of send value by iec104 */
+        sendMonitorTI( 112, stof(msg) );
+    }
 }
 
 void TestObserver::OnSubscribe(int mid, int qos_count, const int *granted_qos)
