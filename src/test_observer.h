@@ -36,7 +36,7 @@ void TestObserver::OnMessage(const struct mosquitto_message *message)
     if( isTopicMonitored( message->topic ) )
     {
         /* Example of send value by iec104 */
-        sendMonitorTI( 112, stof(msg) );
+        sendMonitorTI( getTopicIoa(  message->topic ), stof(msg) );
     }
 }
 

@@ -17,6 +17,7 @@ static Json::Value Root;
 
 static void applyMqttSettings();
 static void applyIecSettings();
+static void addRegistersForConvert();
 
 /*!
  * Function use getopt utils for parsing command line arguments.
@@ -82,7 +83,10 @@ void parseCommandLineArgs(int argc, char *argv[])
         applyIecSettings();
     }
 
-    addTopicForMonitor( "/devices/hwmon/controls/CPU Temperature", 112);
+    if( Root["Registers"].isObject() )
+    {
+        addRegistersForConvert();
+    }
 }
 
 static void applyMqttSettings()
@@ -100,8 +104,18 @@ static void applyIecSettings()
     std::string ip = Root["Iec"]["IPAddress"].asString();
     int port = Root["Iec"]["IPPort"].asInt();
 
-    printf("Set iec ip port: %s with port %d\n", ip.c_str(), port);
-
     iec104Server::Instance().setIpAddress( ip.c_str() );
     iec104Server::Instance().setIpPort( port );
+}
+
+static void addRegistersForConvert()
+{
+    Json::Value registers = Root["Registers"]["MonitorTI"];
+    if( registers.isArray() )
+    {
+        for(uint i=0; i<registers.size(); ++i)
+        {
+            addTopicForMonitor( registers[i]["Address"].asString().c_str(), registers[i]["IOA"].asInt());
+        }
+    }       
 }

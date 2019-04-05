@@ -31,7 +31,9 @@ void MqttClient::setupMqttServer( std::string & host, int port, int keepAlive )
 
     mqtt_client->ConnectAsync();
     mqtt_client->StartLoop();
+}
 
-    /* Test subscription */
-    mqtt_client->Subscribe( nullptr, "/devices/hwmon/controls/CPU Temperature" , 0);
+void MqttClient::subscribe( const char* topic )
+{
+    mqtt_client->Subscribe( nullptr, topic , 0);
 }

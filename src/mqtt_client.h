@@ -23,6 +23,7 @@ public:
     }
 
     void setupMqttServer( std::string & host, int port, int keepalive );
+    void subscribe( const char* topic );
 
 private:
     /* Hidden constructor and destructor */

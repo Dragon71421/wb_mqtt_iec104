@@ -3,18 +3,25 @@
 #include <map>
 
 #include "iec104_server.h"
+#include "mqtt_client.h"
 
-std::map <std::string, uint16_t> convertMap;
+static std::map <std::string, uint16_t> convertMap;
 
 void  addTopicForMonitor( const char* topic, uint16_t ioa )
 {
     convertMap.insert( {topic, ioa} );
-    return;
+    
+    MqttClient::Instance().subscribe( topic );
 }
 
 bool isTopicMonitored( const char* topic )
 {
     return convertMap.count( topic ) ? true : false;
+}
+
+uint16_t getTopicIoa( const char* topic )
+{
+    return convertMap.at( topic );
 }
 
 void sendMonitorTI( uint16_t ioa, float value )
