@@ -2,19 +2,21 @@
 
 #include <iostream>
 
+#include "log.h"
+
 static void printCP56Time2a(CP56Time2a time)
 {
-    printf("%02i:%02i:%02i %02i/%02i/%04i", CP56Time2a_getHour(time),
-                             CP56Time2a_getMinute(time),
-                             CP56Time2a_getSecond(time),
-                             CP56Time2a_getDayOfMonth(time),
-                             CP56Time2a_getMonth(time),
-                             CP56Time2a_getYear(time) + 2000);
+    MQTT_LOG_PRINTF( LogLevels::DEBUG, "%02i:%02i:%02i %02i/%02i/%04i", CP56Time2a_getHour(time),
+                                                                        CP56Time2a_getMinute(time),
+                                                                        CP56Time2a_getSecond(time),
+                                                                        CP56Time2a_getDayOfMonth(time),
+                                                                        CP56Time2a_getMonth(time),
+                                                                        CP56Time2a_getYear(time) + 2000);
 }
 
 static bool clockSyncHandler (void* parameter, IMasterConnection connection, CS101_ASDU asdu, CP56Time2a newTime)
 {
-    printf("Process time sync command with time "); printCP56Time2a(newTime); printf("\n");
+    MQTT_LOGGER( LogLevels::DEBUG, "Process time sync command with time "); printCP56Time2a(newTime);
 
     /* Set time for ACT_CON message */
     CP56Time2a_setFromMsTimestamp(newTime, Hal_getTimeInMs());
@@ -26,68 +28,10 @@ static bool clockSyncHandler (void* parameter, IMasterConnection connection, CS1
 
 static bool interrogationHandler(void* parameter, IMasterConnection connection, CS101_ASDU asdu, uint8_t qoi)
 {
-    printf("Received interrogation for group %i\n", qoi);
+    MQTT_LOG_PRINTF( LogLevels::DEBUG, "Received interrogation for group %i", qoi );
 
     if (qoi == 20) { /* only handle station interrogation */
-
-        CS101_AppLayerParameters alParams = IMasterConnection_getApplicationLayerParameters(connection);
-
         IMasterConnection_sendACT_CON(connection, asdu, false);
-
-        /* The CS101 specification only allows information objects without timestamp in GI responses */
-
-        CS101_ASDU newAsdu = CS101_ASDU_create(alParams, false, CS101_COT_INTERROGATED_BY_STATION,
-                0, 1, false, false);
-
-        InformationObject io = (InformationObject) MeasuredValueScaled_create(NULL, 100, -1, IEC60870_QUALITY_GOOD);
-
-        CS101_ASDU_addInformationObject(newAsdu, io);
-
-        CS101_ASDU_addInformationObject(newAsdu, (InformationObject)
-            MeasuredValueScaled_create((MeasuredValueScaled) io, 101, 23, IEC60870_QUALITY_GOOD));
-
-        CS101_ASDU_addInformationObject(newAsdu, (InformationObject)
-            MeasuredValueScaled_create((MeasuredValueScaled) io, 102, 2300, IEC60870_QUALITY_GOOD));
-
-        InformationObject_destroy(io);
-
-        IMasterConnection_sendASDU(connection, newAsdu);
-
-        CS101_ASDU_destroy(newAsdu);
-
-        newAsdu = CS101_ASDU_create(alParams, false, CS101_COT_INTERROGATED_BY_STATION,
-                    0, 1, false, false);
-
-        io = (InformationObject) SinglePointInformation_create(NULL, 104, true, IEC60870_QUALITY_GOOD);
-
-        CS101_ASDU_addInformationObject(newAsdu, io);
-
-        CS101_ASDU_addInformationObject(newAsdu, (InformationObject)
-            SinglePointInformation_create((SinglePointInformation) io, 105, false, IEC60870_QUALITY_GOOD));
-
-        InformationObject_destroy(io);
-
-        IMasterConnection_sendASDU(connection, newAsdu);
-
-        CS101_ASDU_destroy(newAsdu);
-
-        newAsdu = CS101_ASDU_create(alParams, true, CS101_COT_INTERROGATED_BY_STATION,
-                0, 1, false, false);
-
-        CS101_ASDU_addInformationObject(newAsdu, io = (InformationObject) SinglePointInformation_create(NULL, 300, true, IEC60870_QUALITY_GOOD));
-        CS101_ASDU_addInformationObject(newAsdu, (InformationObject) SinglePointInformation_create((SinglePointInformation) io, 301, false, IEC60870_QUALITY_GOOD));
-        CS101_ASDU_addInformationObject(newAsdu, (InformationObject) SinglePointInformation_create((SinglePointInformation) io, 302, true, IEC60870_QUALITY_GOOD));
-        CS101_ASDU_addInformationObject(newAsdu, (InformationObject) SinglePointInformation_create((SinglePointInformation) io, 303, false, IEC60870_QUALITY_GOOD));
-        CS101_ASDU_addInformationObject(newAsdu, (InformationObject) SinglePointInformation_create((SinglePointInformation) io, 304, true, IEC60870_QUALITY_GOOD));
-        CS101_ASDU_addInformationObject(newAsdu, (InformationObject) SinglePointInformation_create((SinglePointInformation) io, 305, false, IEC60870_QUALITY_GOOD));
-        CS101_ASDU_addInformationObject(newAsdu, (InformationObject) SinglePointInformation_create((SinglePointInformation) io, 306, true, IEC60870_QUALITY_GOOD));
-        CS101_ASDU_addInformationObject(newAsdu, (InformationObject) SinglePointInformation_create((SinglePointInformation) io, 307, false, IEC60870_QUALITY_GOOD));
-
-        InformationObject_destroy(io);
-
-        IMasterConnection_sendASDU(connection, newAsdu);
-
-        CS101_ASDU_destroy(newAsdu);
 
         IMasterConnection_sendACT_TERM(connection, asdu);
     }
@@ -101,7 +45,7 @@ static bool interrogationHandler(void* parameter, IMasterConnection connection, 
 static bool asduHandler(void* parameter, IMasterConnection connection, CS101_ASDU asdu)
 {
     if (CS101_ASDU_getTypeID(asdu) == C_SC_NA_1) {
-        printf("received single command\n");
+        MQTT_LOGGER( LogLevels::DEBUG, "received single command\n");
 
         if  (CS101_ASDU_getCOT(asdu) == CS101_COT_ACTIVATION) {
             InformationObject io = CS101_ASDU_getElement(asdu, 0);
@@ -109,7 +53,7 @@ static bool asduHandler(void* parameter, IMasterConnection connection, CS101_ASD
             if (InformationObject_getObjectAddress(io) == 5000) {
                 SingleCommand sc = (SingleCommand) io;
 
-                printf("IOA: %i switch to %i\n", InformationObject_getObjectAddress(io),
+                MQTT_LOG_PRINTF( LogLevels::DEBUG, "IOA: %i switch to %i\n", InformationObject_getObjectAddress(io),
                         SingleCommand_getState(sc));
 
                 CS101_ASDU_setCOT(asdu, CS101_COT_ACTIVATION_CON);
@@ -132,7 +76,7 @@ static bool asduHandler(void* parameter, IMasterConnection connection, CS101_ASD
 
 static bool connectionRequestHandler(void* parameter, const char* ipAddress)
 {
-    printf("New connection request from %s\n", ipAddress);
+    MQTT_LOG_PRINTF( LogLevels::DEBUG, "New connection request from %s\n", ipAddress);
 
     /* Example of accepting connection only from one ip address */
 #if 0
@@ -152,16 +96,16 @@ static bool connectionRequestHandler(void* parameter, const char* ipAddress)
 static void connectionEventHandler(void* parameter, IMasterConnection con, CS104_PeerConnectionEvent event)
 {
     if (event == CS104_CON_EVENT_CONNECTION_OPENED) {
-        printf("Connection opened (%p)\n", (void*)con);
+        MQTT_LOG_PRINTF( LogLevels::DEBUG, "Connection opened (%p)\n", (void*)con);
     }
     else if (event == CS104_CON_EVENT_CONNECTION_CLOSED) {
-        printf("Connection closed (%p)\n", (void*)con);
+        MQTT_LOG_PRINTF( LogLevels::DEBUG, "Connection closed (%p)\n", (void*)con);
     }
     else if (event == CS104_CON_EVENT_ACTIVATED) {
-        printf("Connection activated (%p)\n", (void*)con);
+        MQTT_LOG_PRINTF( LogLevels::DEBUG, "Connection activated (%p)\n", (void*)con);
     }
     else if (event == CS104_CON_EVENT_DEACTIVATED) {
-        printf("Connection deactivated (%p)\n", (void*)con);
+        MQTT_LOG_PRINTF( LogLevels::DEBUG, "Connection deactivated (%p)\n", (void*)con);
     }
 }
 

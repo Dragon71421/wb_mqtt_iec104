@@ -53,36 +53,14 @@ int main( int argc, char** argv )
         std::cerr << e.what() << std::endl;
         return 1;
     }
-
-    /* get the connection parameters - we need them to create correct ASDUs */
-    CS101_AppLayerParameters alParams = iec104Server::Instance().getAppParams();
-
+    
     iec104Server::Instance().start();
 
     MQTT_LOGGER( LogLevels::DEBUG, "Start main loop" );
-    int16_t scaledValue = 0;
+
     while(running)
     {
-        /* Print test message every 5 seconds */
-        sleep(5);
-        MQTT_LOGGER( LogLevels::DEBUG, "Test wb MQTT" );
-
-        CS101_ASDU newAsdu = CS101_ASDU_create(alParams, false, CS101_COT_PERIODIC, 0, 1, false, false);
-        InformationObject io = (InformationObject) MeasuredValueScaled_create(NULL, 110, scaledValue, IEC60870_QUALITY_GOOD);
-
-        scaledValue++;
-
-        CS101_ASDU_addInformationObject(newAsdu, io);
-
-        InformationObject_destroy(io);
-
-        /* Add ASDU to slave event queue - don't release the ASDU afterwards!
-         * The ASDU will be released by the Slave instance when the ASDU
-         * has been sent.
-         */
-        iec104Server::Instance().sendAsdu( newAsdu );
-
-        CS101_ASDU_destroy(newAsdu);
+        
     }
 
     return 0;

@@ -24,6 +24,6 @@ set (libs       wbmqtt
 
 
 # create main executed file
-add_executable( wb-mqtt-iec104 ${bin_src} )
+add_executable( iec104-server ${bin_src} )
 
-target_link_libraries( wb-mqtt-iec104 ${libs} )
+target_link_libraries( iec104-server ${libs} )
